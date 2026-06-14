@@ -98,6 +98,12 @@ export const expenses = pgTable("expenses", {
 
   expenseDate: timestamp("expense_date")
     .notNull(),
+    
+  recurringExpenseId: uuid(
+    "recurring_expense_id"
+  ).references(
+    () => recurringExpenses.id
+  ),
 
   receiptUrl: text("receipt_url"),
 
@@ -191,6 +197,158 @@ export const budgets = pgTable(
     ).on(table.periodType),
   })
 );
+
+
+
+
+// Recurring expenses table
+export const recurringFrequencyEnum = pgEnum(
+  "recurring_frequency",
+  [
+    "DAILY",
+    "WEEKLY",
+    "MONTHLY",
+    "QUARTERLY",
+    "YEARLY",
+  ]
+);
+export const recurringExpenses = pgTable(
+  "recurring_expenses",
+  {
+    id: uuid("id")
+      .defaultRandom()
+      .primaryKey(),
+
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id),
+
+    title: varchar("title", {
+      length: 255,
+    }).notNull(),
+
+    description: text("description"),
+
+    amount: numeric("amount", {
+      precision: 12,
+      scale: 2,
+    }).notNull(),
+
+    frequency: recurringFrequencyEnum(
+      "frequency"
+    ).notNull(),
+
+    startDate: date("start_date")
+      .notNull(),
+
+    endDate: date("end_date"),
+
+    nextRunAt: timestamp("next_run_at")
+      .notNull(),
+
+    isActive: boolean("is_active")
+      .default(true)
+      .notNull(),
+
+    createdAt: timestamp("created_at")
+      .defaultNow()
+      .notNull(),
+
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .notNull(),
+
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => ({
+    userIdIdx: index(
+      "recurring_expenses_user_id_idx"
+    ).on(table.userId),
+
+    categoryIdIdx: index(
+      "recurring_expenses_category_id_idx"
+    ).on(table.categoryId),
+
+    nextRunAtIdx: index(
+      "recurring_expenses_next_run_at_idx"
+    ).on(table.nextRunAt),
+
+    activeIdx: index(
+      "recurring_expenses_active_idx"
+    ).on(table.isActive),
+  })
+);
+
+
+
+
+
+
+
+
+// Audit logs table
+export const auditActionEnum = pgEnum("audit_action", [
+  "CREATE",
+  "UPDATE",
+  "DELETE",
+  "RESTORE",
+]);
+
+export const auditEntityEnum = pgEnum("audit_entity", [
+  "USER",
+  "CATEGORY",
+  "EXPENSE",
+  "BUDGET",
+  "RECURRING_EXPENSE",
+]);
+
+export const auditLogs = pgTable(
+  "audit_logs",
+  {
+    id: uuid("id")
+      .defaultRandom()
+      .primaryKey(),
+
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+
+    entityType: auditEntityEnum("entity_type")
+      .notNull(),
+
+    entityId: uuid("entity_id")
+      .notNull(),
+
+    action: auditActionEnum("action")
+      .notNull(),
+
+    oldData: jsonb("old_data"),
+
+    newData: jsonb("new_data"),
+
+    createdAt: timestamp("created_at")
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("audit_logs_user_id_idx")
+      .on(table.userId),
+
+    entityTypeIdx: index("audit_logs_entity_type_idx")
+      .on(table.entityType),
+
+    entityIdIdx: index("audit_logs_entity_id_idx")
+      .on(table.entityId),
+
+    createdAtIdx: index("audit_logs_created_at_idx")
+      .on(table.createdAt),
+  })
+);
+
 
 
 
