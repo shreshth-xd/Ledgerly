@@ -6,7 +6,8 @@ import {
   boolean,
   unique,
   numeric,
-  text
+  text,
+  jsonb
 } from "drizzle-orm/pg-core";
 
 import { AnyPgColumn } from "drizzle-orm/pg-core";
