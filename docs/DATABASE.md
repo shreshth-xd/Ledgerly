@@ -324,6 +324,90 @@ Fast retrieval of budgets by period type.
 
 
 
+# Recurring Expenses
+
+Purpose:
+Stores recurring expense templates that automatically generate expense records.
+
+## Relationships
+
+users (1) ──────── (N) recurring_expenses
+
+categories (1) ──────── (N) recurring_expenses
+
+recurring_expenses (1) ──────── (N) expenses
+
+## Foreign Keys
+
+* user_id → users.id
+* category_id → categories.id
+
+## Business Rules
+
+* Recurring expenses act as templates.
+* Ledgerly automatically generates expense records.
+* Generated expenses participate in analytics and budgeting.
+* Generated expenses become independent records.
+* Editing a recurring template affects only future generated expenses.
+* Editing a generated expense affects only that expense.
+* Past occurrences are never generated automatically.
+* Soft deletes are supported.
+
+## Frequency Types
+
+* DAILY
+* WEEKLY
+* MONTHLY
+* QUARTERLY
+* YEARLY
+
+## Scheduling
+
+Recurring schedules are derived from:
+
+* start_date
+* frequency
+
+No additional scheduling metadata is stored.
+
+## Columns
+
+* id (UUID, PK)
+* user_id (UUID)
+* category_id (UUID)
+* title (VARCHAR 255)
+* description (TEXT, nullable)
+* amount (NUMERIC 12,2)
+* frequency (ENUM)
+* start_date
+* end_date (nullable)
+* next_run_at
+* is_active
+* created_at
+* updated_at
+* deleted_at
+
+## Indexes
+
+recurring_expenses_user_id_idx
+
+Purpose:
+Fast retrieval of recurring expenses belonging to a user.
+
+recurring_expenses_category_id_idx
+
+Purpose:
+Fast retrieval by category.
+
+recurring_expenses_next_run_at_idx
+
+Purpose:
+Fast scheduler lookup of due recurring expenses.
+
+recurring_expenses_active_idx
+
+Purpose:
+Fast filtering of active recurring expenses.
 
 
 
