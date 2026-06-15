@@ -162,6 +162,16 @@ categories (1) ──────── (N) expenses
 * updated_at
 * deleted_at (nullable)
 
+
+## Additional Column
+
+- currency (ENUM)
+
+Business Rules
+
+- Every expense belongs to exactly one currency.
+- Users may create expenses in multiple currencies.
+
 ## Indexes
 
 ### expenses_user_id_idx
@@ -301,6 +311,15 @@ MONTHLY
 - updated_at
 - deleted_at
 
+## Additional Column
+
+- currency (ENUM)
+
+Business Rules
+
+- Every budget belongs to exactly one currency.
+- Budgets are evaluated only against expenses in the same currency.
+
 ## Indexes
 
 budgets_user_id_idx
@@ -386,6 +405,15 @@ No additional scheduling metadata is stored.
 * created_at
 * updated_at
 * deleted_at
+
+## Additional Column
+
+- currency (ENUM)
+
+Business Rules
+
+- Every recurring expense belongs to exactly one currency.
+- Generated expenses inherit the currency of the recurring expense.
 
 ## Indexes
 
