@@ -23,6 +23,45 @@ export const budgetPeriodEnum = pgEnum("budget_period", [
 ]);
 
 
+export const recurringFrequencyEnum = pgEnum(
+  "recurring_frequency",
+  [
+    "DAILY",
+    "WEEKLY",
+    "MONTHLY",
+    "QUARTERLY",
+    "YEARLY",
+  ]
+);
+
+export const auditActionEnum = pgEnum("audit_action", [
+  "CREATE",
+  "UPDATE",
+  "DELETE",
+  "RESTORE",
+]);
+
+export const auditEntityEnum = pgEnum("audit_entity", [
+  "USER",
+  "CATEGORY",
+  "EXPENSE",
+  "BUDGET",
+  "RECURRING_EXPENSE",
+]);
+
+export const currencyEnum = pgEnum("currency", [
+"INR",
+"USD",
+"EUR",
+"GBP",
+"JPY",
+"AUD",
+"CAD",
+"SGD",
+"AED",
+]);
+
+
 // Users table
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -91,6 +130,8 @@ export const expenses = pgTable("expenses", {
     scale: 2,
   }).notNull(),
 
+  currency: currencyEnum("currency").default("INR").notNull(),
+
   title: varchar("title", {
     length: 255,
   }).notNull(),
@@ -155,6 +196,8 @@ export const budgets = pgTable(
       scale: 2,
     }).notNull(),
 
+    currency: currencyEnum("currency").default("INR").notNull(),
+
     periodType: budgetPeriodEnum("period_type")
       .notNull(),
 
@@ -203,16 +246,6 @@ export const budgets = pgTable(
 
 
 // Recurring expenses table
-export const recurringFrequencyEnum = pgEnum(
-  "recurring_frequency",
-  [
-    "DAILY",
-    "WEEKLY",
-    "MONTHLY",
-    "QUARTERLY",
-    "YEARLY",
-  ]
-);
 export const recurringExpenses = pgTable(
   "recurring_expenses",
   {
@@ -238,6 +271,8 @@ export const recurringExpenses = pgTable(
       precision: 12,
       scale: 2,
     }).notNull(),
+
+    currency: currencyEnum("currency").default("INR").notNull(),
 
     frequency: recurringFrequencyEnum(
       "frequency"
@@ -292,20 +327,6 @@ export const recurringExpenses = pgTable(
 
 
 // Audit logs table
-export const auditActionEnum = pgEnum("audit_action", [
-  "CREATE",
-  "UPDATE",
-  "DELETE",
-  "RESTORE",
-]);
-
-export const auditEntityEnum = pgEnum("audit_entity", [
-  "USER",
-  "CATEGORY",
-  "EXPENSE",
-  "BUDGET",
-  "RECURRING_EXPENSE",
-]);
 
 export const auditLogs = pgTable(
   "audit_logs",
