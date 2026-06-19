@@ -1,7 +1,7 @@
 // src/routes/health.routes.ts
 
 import { Router } from "express";
-import { db } from "../src/db";
+import { db } from "../db/index";
 
 const router = Router();
 
