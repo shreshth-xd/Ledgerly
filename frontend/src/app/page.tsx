@@ -2,6 +2,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import Link from "next/link" ; 
 
 import { DashboardSummaryCards } from "@/components/dashboard-summary-cards";
 import { RecentExpensesTable } from "@/components/recent-expenses-table";
@@ -16,29 +17,47 @@ export default function Home() {
           </div>
 
           <nav className="flex flex-col gap-1 p-3">
-            <button className="rounded-md px-3 py-2 text-left hover:bg-accent">
+            <Link
+              href="/"
+              className="rounded-md px-3 py-2 hover:bg-accent"
+            >
               Dashboard
-            </button>
+            </Link>
 
-            <button className="rounded-md px-3 py-2 text-left hover:bg-accent">
+            <Link
+              href="/expenses"
+              className="rounded-md px-3 py-2 hover:bg-accent"
+            >
               Expenses
-            </button>
+            </Link>
 
-            <button className="rounded-md px-3 py-2 text-left hover:bg-accent">
+            <Link
+              href="/categories"
+              className="rounded-md px-3 py-2 hover:bg-accent"
+            >
               Categories
-            </button>
+            </Link>
 
-            <button className="rounded-md px-3 py-2 text-left hover:bg-accent">
+            <Link
+              href="/budgets"
+              className="rounded-md px-3 py-2 hover:bg-accent"
+            >
               Budgets
-            </button>
+            </Link>
 
-            <button className="rounded-md px-3 py-2 text-left hover:bg-accent">
+            <Link
+              href="/recurring"
+              className="rounded-md px-3 py-2 hover:bg-accent"
+            >
               Recurring
-            </button>
+            </Link>
 
-            <button className="rounded-md px-3 py-2 text-left hover:bg-accent">
+            <Link
+              href="/settings"
+              className="rounded-md px-3 py-2 hover:bg-accent"
+            >
               Settings
-            </button>
+            </Link>
           </nav>
         </aside>
 
