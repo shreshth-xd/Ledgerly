@@ -2,7 +2,15 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import Link from "next/link" ; 
+
+import {
+  Show,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+} from "@clerk/nextjs";
+
+import Link from "next/link"; 
 
 import { DashboardSummaryCards } from "@/components/dashboard-summary-cards";
 import { RecentExpensesTable } from "@/components/recent-expenses-table";
@@ -69,11 +77,25 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                INR
-              </span>
+              <span className="text-sm text-muted-foreground">INR</span>
 
-              <div className="h-8 w-8 rounded-full bg-muted" />
+              <Show when="signed-out">
+                <div className="flex items-center gap-2">
+                  <SignInButton mode="modal">
+                    <button className="rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent">
+                      Sign in
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                      Sign up
+                    </button>
+                  </SignUpButton>
+                </div>
+              </Show>
+              <Show when="signed-in">
+                <UserButton />
+              </Show>
             </div>
           </header>
 
