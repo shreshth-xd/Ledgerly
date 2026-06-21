@@ -5,6 +5,7 @@
 frontend/AGENTS.md
 frontend/node_modules
 frontend/.next
+frontend/.next/types
 
 docs/TASKS.md
 
