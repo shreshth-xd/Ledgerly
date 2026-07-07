@@ -1,7 +1,15 @@
 import app from "./app";
 
-const PORT = 3000;
+const PORT = process.env.PORT;
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+const server = app.listen(PORT, () => {
+  const address = server.address();
+
+  if (address && typeof address !== "string") {
+    console.log(`Server listening on port ${address.port}`);
+  }
+});
+
+server.on("error", (err) => {
+  console.error(err);
 });
