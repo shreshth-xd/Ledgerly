@@ -6,7 +6,7 @@ import webhookRouter from "./routes/webhook.routes";
 const app = express();
 
 app.use("/expenses", expensesRouter);
-app.use("/webhook", express.raw({ type: "application/json" }), webhookRouter);
+app.use("/webhooks", express.raw({ type: "application/json" }), webhookRouter);
 app.use(express.json());
 
 app.use("/health", healthRouter);
