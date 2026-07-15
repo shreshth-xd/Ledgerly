@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { Webhook } from "svix";
+import { db } from "../db";
+import { users } from "../db/schema";
+import { eq } from "drizzle-orm";
 
-export async function clerkWebhookController(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
+export async function clerkWebhookController(req: Request, res: Response): Promise<void> {
+
+  const webhookSecret = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
 
   if (!webhookSecret) {
     res.status(500).json({ error: "Missing Clerk webhook secret" });
@@ -22,7 +23,6 @@ export async function clerkWebhookController(
   }
 
   const wh = new Webhook(webhookSecret);
-
   let event: Record<string, unknown>;
 
   try {
@@ -36,7 +36,104 @@ export async function clerkWebhookController(
     return;
   }
 
-  console.log(event);
+  switch (event.type) {
+    case "user.created": {
+      const data = event.data as {
+        id: string;
+        username: string | null;
+        first_name: string | null;
+        last_name: string | null;
+        email_addresses: {
+          id: string;
+          email_address: string;
+        }[];
+        primary_email_address_id: string | null;
+      };
+
+      const primaryEmail = data.email_addresses.find(
+        (email) => email.id === data.primary_email_address_id
+      );
+
+      // console.log({
+      //   clerkUserId: data.id,
+      //   email: primaryEmail?.email_address,
+      //   username: data.username,
+      //   firstName: data.first_name,
+      //   lastName: data.last_name,
+      // });
+      try {
+        await db.insert(users).values({
+          clerkUserId: data.id,
+          email: primaryEmail!.email_address,
+        });
+      } catch (error) {
+        console.error("Error inserting user:", error);
+        res.status(500).json({ error: "Internal server error" });
+        return;
+      }
+
+      break;
+    }
+
+    case "user.updated": {
+      const data = event.data as {
+        id: string;
+        username: string | null;
+        first_name: string | null;
+        last_name: string | null;
+        email_addresses: {
+          id: string;
+          email_address: string;
+        }[];
+        primary_email_address_id: string | null;
+      };
+
+      const primaryEmail = data.email_addresses.find(
+        (email) => email.id === data.primary_email_address_id
+      );
+
+      console.log({
+        clerkUserId: data.id,
+        email: primaryEmail?.email_address,
+        username: data.username,
+        firstName: data.first_name,
+        lastName: data.last_name,
+      });
+
+      await db
+        .update(users)
+        .set({
+          email: primaryEmail!.email_address,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.clerkUserId, data.id));
+
+      break;
+    }
+
+    case "user.deleted": {
+      const data = event.data as {
+        id: string;
+      };
+
+      console.log({
+        clerkUserId: data.id,
+      });
+
+      await db
+        .delete(users)
+        .where(eq(users.clerkUserId, data.id));
+
+      break;
+    }
+
+    default: {
+      console.log(`Ignoring Clerk event: ${event.type}`);
+      break;
+    }
+  }
 
   res.status(200).json({ received: true });
+  return;
+
 }
