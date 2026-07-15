@@ -62,10 +62,19 @@ export async function clerkWebhookController(req: Request, res: Response): Promi
       //   lastName: data.last_name,
       // });
       try {
-        await db.insert(users).values({
-          clerkUserId: data.id,
-          email: primaryEmail!.email_address,
-        });
+        await db
+          .insert(users)
+          .values({
+            clerkUserId: data.id,
+            email: primaryEmail!.email_address,
+          })
+          .onConflictDoUpdate({
+            target: users.clerkUserId,
+            set: {
+              email: primaryEmail!.email_address,
+              updatedAt: new Date(),
+            },
+          });
       } catch (error) {
         console.error("Error inserting user:", error);
         res.status(500).json({ error: "Internal server error" });
