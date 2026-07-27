@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { Webhook } from "svix";
 import { handleClerkWebhook } from "../services/clerkWebhook.service";
+import { validate } from "../middlewares/validate.middleware";
+import { clerkWebhookSchema } from "../validators/auth.validator";
 
 export async function clerkWebhookController(req: Request, res: Response): Promise<void> {
 
@@ -34,6 +36,10 @@ export async function clerkWebhookController(req: Request, res: Response): Promi
     return;
   }
 
+  const validatedEvent = await clerkWebhookSchema.parseAsync(event);
+  await handleClerkWebhook(validatedEvent);
+
+  // Calling Webhook service to save the user on database
   try {
     await handleClerkWebhook(event);
 
@@ -47,8 +53,5 @@ export async function clerkWebhookController(req: Request, res: Response): Promi
     });
   return;
 }
-
-  res.status(200).json({ received: true });
-  return;
 
 }
