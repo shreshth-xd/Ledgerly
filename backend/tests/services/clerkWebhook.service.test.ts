@@ -1,27 +1,37 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleClerkWebhook } from "../../src/services/clerkWebhook.service";
+import { __mocks } from "../../src/db";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("../../src/db", () => {
+  const onConflictDoUpdate = vi.fn();
 
-const onConflictDoUpdate = vi.fn();
+  const values = vi.fn(() => ({
+    onConflictDoUpdate,
+  }));
 
-const values = vi.fn(() => ({
-  onConflictDoUpdate,
-}));
+  const insert = vi.fn(() => ({
+    values,
+  }));
 
-const insert = vi.fn(() => ({
-  values,
-}));
+  const update = vi.fn();
+  const del = vi.fn();
 
-const update = vi.fn();
-const del = vi.fn();
+  return {
+    db: {
+      insert,
+      update,
+      delete: del,
+    },
+    __mocks: {
+      insert,
+      values,
+      onConflictDoUpdate,
+      update,
+      del,
+    },
+  };
+});
 
-vi.mock("../../src/db", () => ({
-  db: {
-    insert,
-    update,
-    delete: del,
-  },
-}));
 
 describe("handleClerkWebhook", () => {
   beforeEach(() => {
@@ -48,8 +58,19 @@ describe("handleClerkWebhook", () => {
 
     await handleClerkWebhook(event as Record<string, unknown>);
 
-    expect(insert).toHaveBeenCalledTimes(1);
-    expect(values).toHaveBeenCalledTimes(1);
-    expect(onConflictDoUpdate).toHaveBeenCalledTimes(1);
+    expect(__mocks.insert).toHaveBeenCalledTimes(1);
+    expect(__mocks.values).toHaveBeenCalledWith({
+      clerkUserId: "user_123",
+      email: "test@example.com",
+    });
+
+    expect(__mocks.onConflictDoUpdate).toHaveBeenCalledWith({
+      target: expect.anything(),
+      set: {
+        email: "test@example.com",
+        updatedAt: expect.any(Date),
+      },
+    });
+
   });
 });
