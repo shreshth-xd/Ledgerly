@@ -371,8 +371,8 @@ export const auditLogs = pgTable(
   })
 );
 
-
-
+// Type exports
+export type User = typeof users.$inferSelect;
 
 // TODO:
 // PostgreSQL UNIQUE constraints treat NULL values as distinct.
