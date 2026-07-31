@@ -6,7 +6,7 @@ export async function createCategoryController(
   res: Response
 ): Promise<void> {
   try {
-    const category = await createCategory(req.body);
+    const category = await createCategory(req.user.id, req.body);
 
     res.status(201).json(category);
   } catch (error) {

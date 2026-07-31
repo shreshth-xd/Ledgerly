@@ -14,6 +14,7 @@ export async function requireAuth(
 ): Promise<void> {
   const { userId } = getAuth(req);
 
+  
   if (!userId) {
     res.status(401).json({ error: "Unauthorized" });
     return;
@@ -29,6 +30,7 @@ export async function requireAuth(
     return;
   }
 
+  
   (req as Request & { user: typeof user }).user = user;
 
   next();
