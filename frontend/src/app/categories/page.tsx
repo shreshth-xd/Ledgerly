@@ -7,33 +7,28 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Trash2, Edit, Car, Utensils, Film, Code, HelpCircle } from "lucide-react";
 
-const categories = [
-    {
-        id: 1,
-        name: "Food",
-        expenses: 42,
-    },
-    {
-        id: 2,
-        name: "Travel",
-        expenses: 18,
-    },
-    {
-        id: 3,
-        name: "Entertainment",
-        expenses: 11,
-    },
-    {
-        id: 4,
-        name: "Development",
-        expenses: 7,
-    },
-];
+
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+
+type Category = {
+    id: string;
+    name: string;
+    expenses: number;
+    isSystem: boolean;
+};
+
+type ApiCategory = {
+    id: string;
+    name: string;
+    expenseCount: number;
+    isSystem: boolean;
+};
 
 const categoryStyles: Record<string, { icon: any; color: string; bg: string; border: string }> = {
   Travel: {
@@ -72,6 +67,96 @@ const getCategoryStyle = (category: string) => {
 };
 
 export default function CategoriesPage() {
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [name, setName] = useState("");
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+    const { getToken } = useAuth();
+
+    const fetchCategories = useCallback(async () => {
+        const token = await getToken();
+        if (!token) {
+            setLoading(false);
+            return;
+        }
+
+        const res = await fetch("http://localhost:5000/categories", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (!res.ok) {
+            setLoading(false);
+            return;
+        }
+
+        const data: ApiCategory[] = await res.json();
+        setCategories(
+            data.map((category) => ({
+                id: category.id,
+                name: category.name,
+                expenses: Number(category.expenseCount),
+                isSystem: category.isSystem,
+            }))
+        );
+        setLoading(false);
+    }, [getToken]);
+
+    useEffect(() => {
+        fetchCategories();
+    }, [fetchCategories]);
+
+    const resetDialog = () => {
+        setName("");
+        setSelectedCategoryId(null);
+    };
+
+    const handleOpenChange = (open: boolean) => {
+        setDialogOpen(open);
+        if (!open) resetDialog();
+    };
+
+    const openCreateDialog = () => {
+        resetDialog();
+        setDialogOpen(true);
+    };
+
+    const openEditDialog = (category: Category) => {
+        setSelectedCategoryId(category.id);
+        setName(category.name);
+        setDialogOpen(true);
+    };
+
+    const saveCategory = async () => {
+        const trimmed = name.trim();
+        if (!trimmed) return;
+
+        const token = await getToken();
+        const isEditing = selectedCategoryId !== null;
+
+        const res = await fetch(
+            isEditing
+                ? `http://localhost:5000/categories/${selectedCategoryId}`
+                : "http://localhost:5000/categories",
+            {
+                method: isEditing ? "PATCH" : "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name: trimmed }),
+            }
+        );
+
+        if (!res.ok) return;
+
+        setDialogOpen(false);
+        resetDialog();
+        await fetchCategories();
+    };
+
     return (
         <main className="p-6 md:p-8 space-y-8 max-w-5xl mx-auto w-full">
             <div className="flex items-center justify-between">
@@ -80,33 +165,56 @@ export default function CategoriesPage() {
                     <p className="text-xs text-slate-400 mt-0.5">Define taxonomies to classify transaction lines</p>
                 </div>
 
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-4 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-                            <Plus className="size-4" /> Add Category
-                        </Button>
-                    </DialogTrigger>
-
-                    <DialogContent className="bg-[#0E1326] border-white/[0.08] text-white rounded-xl shadow-[0_10px_50px_rgba(0,0,0,0.5)]">
-                        <DialogHeader>
-                            <DialogTitle className="text-lg font-bold text-white tracking-tight">
-                                Create Category
-                            </DialogTitle>
-                        </DialogHeader>
-
-                        <div className="space-y-4 mt-2">
-                            <Input placeholder="Category Name" className="bg-white/[0.02] border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white text-sm" />
-
-                            <Button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_4px_15px_rgba(99,102,241,0.2)] hover:scale-[1.01] active:scale-[0.99] transition-all">
-                                Save Category
-                            </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                <Button
+                    onClick={openCreateDialog}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-4 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                >
+                    <Plus className="size-4" /> Add Category
+                </Button>
             </div>
 
+            <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+                <DialogContent className="bg-[#0E1326] border-white/[0.08] text-white rounded-xl shadow-[0_10px_50px_rgba(0,0,0,0.5)]">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-bold text-white tracking-tight">
+                            {selectedCategoryId ? "Edit Category" : "Create Category"}
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-4 mt-2">
+                        <Input
+                            placeholder="Category Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="bg-white/[0.02] border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white text-sm"
+                        />
+
+                        <Button
+                            onClick={saveCategory}
+                            disabled={!name.trim()}
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_4px_15px_rgba(99,102,241,0.2)] hover:scale-[1.01] active:scale-[0.99] transition-all"
+                        >
+                            Save Category
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-                {categories.map((category) => {
+                {loading
+                    ? Array.from({ length: 4 }).map((_, index) => (
+                          <Skeleton
+                              key={index}
+                              className="h-[220px] rounded-xl bg-white/[0.04]"
+                          />
+                      ))
+                    : categories.length === 0
+                      ? (
+                          <p className="col-span-full text-sm text-slate-400 text-center py-12">
+                              No categories yet. Add one to get started.
+                          </p>
+                        )
+                      : categories.map((category) => {
                     const style = getCategoryStyle(category.name);
                     const Icon = style.icon;
 
@@ -140,7 +248,9 @@ export default function CategoriesPage() {
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-8 text-xs bg-white/[0.02] border-white/[0.08] hover:bg-white/[0.04] hover:text-white rounded-lg transition-colors"
+                                    onClick={() => openEditDialog(category)}
+                                    disabled={category.isSystem}
+                                    className="h-8 text-xs bg-white/[0.02] border-white/[0.08] hover:bg-white/[0.04] hover:text-white rounded-lg transition-colors disabled:opacity-40 disabled:pointer-events-none"
                                 >
                                     <Edit className="size-3.5 mr-1" /> Edit
                                 </Button>

@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
 import {
     Dialog,
     DialogContent,
@@ -102,7 +103,11 @@ const getCategoryStyle = (category: string) => {
   };
 };
 
+
+
+
 export default function ExpensesPage() {
+
     return (
         <main className="p-6 md:p-8 space-y-8 max-w-5xl mx-auto w-full">
             {/* Header Actions */}
